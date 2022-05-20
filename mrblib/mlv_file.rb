@@ -1,12 +1,6 @@
 class Mlv
   def print_filename(filename)
-    x = 0
-    filename.each_char do |c|
-      uni = Termbox.utf8_char_to_unicode(c)
-      Termbox.change_cell(x, Termbox.height - 1, uni, @theme[:base02], @theme[:base06])
-      x += 1
-    end
-    Termbox.present
+    print_utf8_text(filename)
   end
 
   def detect_encoding(text)

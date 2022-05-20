@@ -41,42 +41,61 @@ class Mlv
     end
   end
 
-  def search_and_mark(search_text)
+  def search_and_mark(search_text, direction = :forward)
     @sci.sci_set_target_start(@sci.sci_get_current_pos)
-    @sci.sci_set_target_end(@sci.sci_get_length)
+    if direction == :forward
+      @sci.sci_set_target_end(@sci.sci_get_length)
+    else
+      @sci.sci_set_target_end(0)
+    end
     ret = @sci.sci_search_in_target(search_text.length, search_text)
     if ret != -1
-      @last_search_pos = @sci.sci_get_target_end
-      @sci.sci_goto_pos(@sci.sci_get_target_end)
+      if direction == :forward
+        @last_search_pos = @sci.sci_get_target_end
+        @sci.sci_goto_pos(@sci.sci_get_target_end)
+      else
+        @last_search_pos = @sci.sci_get_target_start
+        @sci.sci_goto_pos(@sci.sci_get_target_start)
+      end
       @sci.sci_set_first_visible_line(@sci.sci_line_from_position(@sci.sci_get_target_end))
       mark_all(search_text)
     end
     ret
   end
 
-  def search_forward
+  def search(prompt, direction)
     @sci.sci_clear_selections
     @sci.sci_set_current_pos(@sci.sci_position_from_point(0, 0))
-    print_prompt('/')
+    print_prompt(prompt)
     @search_text = echo_gets
-    ret = search_and_mark(@search_text) if @search_text != ''
+    ret = search_and_mark(@search_text, direction) if @search_text != ''
     if ret == -1
-      print_prompt('not found')
+      print_message('not found')
     end
   end
 
-  def search_backward
-    print_prompt('?')
+  def search_forward
+    search('/', :forward)
   end
 
-  def search_next
-    return if @search_text == ''
+  def search_backward
+    search('?', :backward)
+  end
 
+  def search_repeat(direction)
     if @sci.sci_line_from_position(@sci.sci_position_from_point(0, 0)) != @sci.sci_line_from_position(@last_search_pos)
       @sci.sci_set_current_pos(@sci.sci_position_from_point(0, 0))
     else
       @sci.sci_set_current_pos(@last_search_pos)
     end
-    search_and_mark(@search_text)
+    search_and_mark(@search_text, direction)
+  end
+
+  def search_next
+    search_repeat(:forward) if @search_text != ''
+  end
+
+  def search_prev
+    search_repeat(:backward) if @search_text != ''
   end
 end

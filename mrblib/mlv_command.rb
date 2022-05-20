@@ -4,6 +4,7 @@ class Mlv
     '/' => :search_forward,
     '?' => :search_backward,
     'n' => :search_next,
+    'N' => :search_prev,
     Termbox::KEY_SPACE => Scintilla::SCI_PAGEDOWN,
     'b' => Scintilla::SCI_PAGEUP,
     'j' => Scintilla::SCI_LINESCROLLDOWN,

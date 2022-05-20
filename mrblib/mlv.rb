@@ -79,18 +79,27 @@ class Mlv
     @sci.refresh
     @search_text = ''
     @last_search_pos = nil
+    @message = ''
+  end
+
+  def print_utf8_text(str)
+    str.each_char.with_index do |c, x|
+      uni = Termbox.utf8_char_to_unicode(c)
+      Termbox.change_cell(x, Termbox.height - 1, uni, @theme[:base02], @theme[:base06])
+    end
+    Termbox.set_cursor(str.length, Termbox.height - 1)
+    (str.length..(Termbox.width - 1)).each do |x|
+      Termbox.change_cell(x, Termbox.height - 1, ' '.chr, @theme[:base06], @theme[:base02])
+    end
+    Termbox.present
+  end
+
+  def print_message(message)
+    @message = message
   end
 
   def print_prompt(prompt)
-    prompt.each_char.with_index do |ch, x|
-      Termbox.change_cell(x, Termbox.height - 1, ch.chr, @theme[:base06], @theme[:base02])
-      Termbox.change_cell(x + 1, Termbox.height - 1, ' '.chr, @theme[:base06], @theme[:base02])
-    end
-    Termbox.set_cursor(prompt.length, Termbox.height - 1)
-    (prompt.length..(Termbox.width - 1)).each do |i|
-      Termbox.change_cell(i, Termbox.height - 1, ' '.chr, @theme[:base06], @theme[:base02])
-    end
-    Termbox.present
+    print_utf8_text(prompt)
   end
 
   def parse_key(command)
@@ -111,15 +120,20 @@ class Mlv
     while (ev = Termbox.poll_event)
       case ev.type
       when Termbox::EVENT_KEY
+        @message = ''
         key = ev.key.zero? ? ev.ch : ev.key
         parse_key(COMMAND_MAP[key]) if COMMAND_MAP.key? key
       end
       mark_all(@search_text) if @search_text != ''
       @sci.refresh
-      if end_of_file
-        print_prompt('(end):')
+      if @message != ''
+        print_prompt(@message)
       else
-        print_prompt(':')
+        if end_of_file
+          print_prompt('(end):')
+        else
+          print_prompt(':')
+        end
       end
     end
   end
